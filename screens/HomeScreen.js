@@ -11,6 +11,7 @@ import {
   FlatList,
   TextInput,
   Picker,
+  Image,
 } from 'react-native';
 import { MonoText } from '../components/StyledText';
 
@@ -20,19 +21,30 @@ const FUEL_TYPES = [
   { key: 'electric', name: 'Electric' },
 ];
 
+// TODO Have breakpoints
+const BARRIERS = [
+  0,
+  20,
+  30,
+  40,
+  50,
+  60,
+  70,
+]
+
 const VEHICLE_OPTIONS = [
   { key: "small_car", name: 'Small car' },
-  { key: "medium_car", name: 'Medium sized car' },
-  { key: "large_car", name: 'Large Car' },
-  { key: "motorbike", name: 'Motorbike' },
-  { key: "scooter", name: 'Scooter' },
-  { key: "motorised_bike", name: 'Motorised Bike' },
-  { key: "electric_scooter", name: 'Electric Scooter' },
-  { key: "electric_bike", name: 'Electric Bike' },
-  { key: "lorry", name: 'Lorry' },
-  { key: "van", name: 'Van' },
+  // { key: "medium_car", name: 'Medium sized car' },
+  // { key: "large_car", name: 'Large Car' },
+  // { key: "motorbike", name: 'Motorbike' },
+  // { key: "scooter", name: 'Scooter' },
+  // { key: "motorised_bike", name: 'Motorised Bike' },
+  // { key: "electric_scooter", name: 'Electric Scooter' },
+  // { key: "electric_bike", name: 'Electric Bike' },
+  // { key: "lorry", name: 'Lorry' },
+  // { key: "van", name: 'Van' },
   // { key: 'bus', name: 'Bus' },
-  // { key: 'train', name: 'Train' },
+  { key: 'train', name: 'Train' },
   // { key: 'plane', name: 'Plane' },
 ]
 
@@ -58,6 +70,7 @@ export default class HomeScreen extends React.Component {
     unit: 'km',
     name: '',
     journeys: [],
+    planetMode: 'dead',
   }
 
 
@@ -65,34 +78,44 @@ export default class HomeScreen extends React.Component {
     this.setState({ distance });
   }
 
+  updatePlanetMode = (mode) => {
+    this.setState({ planetMode: mode });
+  }
+
   addJourney = () => {
     if (!(this.state.distance && this.state.mode
       && this.state.unit)) {
-      console.log(this.state.distance);
-      console.log(this.state.mode);
-      console.log(this.state.unit);
-      console.log('returning');
       return;
     }
     const journeys = this.state.journeys.concat({
       journeyName: this.state.name,
       mode: this.state.mode,
-      distance: this.state.distance,
+      distance: Number(this.state.distance),
       unit: this.state.unit,
     })
     this.setState(Object.assign(getDefaultState(), { journeys }));
   }
 
   getData = () => {
+    console.log(this.state.journeys);
     axios.post(API_ENDPOINT, {
       transport: this.state.journeys,
     }).then((res) => {
       this.setState({ warming: res.data.warming });
+    }).catch((err) => {
+      console.log(err);
     });
   }
 
   updateMode = (key) => {
     this.setState({ mode: key });
+  }
+
+  getImage = () => {
+    if (this.state.warming < 0.5) {
+      return require('../assets/planets/planet_0.jpg');
+    }
+    return require('../assets/planets/planet_7.png');
   }
 
   render() {
@@ -118,8 +141,9 @@ export default class HomeScreen extends React.Component {
                     renderItem={({item}) => <Journey mode={item.mode} distance={item.distance} unit={item.unit} />}
                     keyExtractor={(item, index) => index.toString()} />
 
+          <Button onPress={this.getData} title="Get Carbon from Journey" />
           <Text>{this.state.warming}</Text>
-          <Button onPress={this.getData} title="Press Me" />
+          <Image style={styles.planet} source={this.getImage()} />
       </View>
     );
   }
@@ -173,6 +197,10 @@ const styles = StyleSheet.create({
   },
   pickerStyle: {
     width: 250,
+  },
+  planet: {
+    width: 200,
+    height: 200,
   },
   distanceContainer: {
     margin: 20,

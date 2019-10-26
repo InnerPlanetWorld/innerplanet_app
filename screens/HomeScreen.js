@@ -2,6 +2,7 @@ import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
 import axios from 'axios';
 import { API_ENDPOINT } from '../constants/data'
+import Journey from '../components/journey';
 
 var OWN_SCORE;
 
@@ -14,6 +15,7 @@ import {
   Button,
   TouchableOpacity,
   View,
+  FlatList,
 } from 'react-native';
 
 import { MonoText } from '../components/StyledText';
@@ -21,15 +23,25 @@ import { MonoText } from '../components/StyledText';
 export default class HomeScreen extends React.Component {
   state = {
     warming: 0,
+    mode: 'small_car',
+    distance: 50,
+    unit: 'km',
+    journeys: [],
   }
 
   getData = () => {
     axios.post(API_ENDPOINT, {
       transport: [
-        { mode: 'small_car', distance: 50, unit: 'km' },
+        { mode: this.state.mode, distance: this.state.distance, unit: this.state.unit },
       ],
     }).then((res) => {
       this.setState({ warming: res.data.warming });
+      const journeys = this.state.journeys.concat({
+        mode: this.state.mode,
+        distance: this.state.distance,
+        unit: this.state.unit,
+      })
+      this.setState({ journeys });
     });
   }
 
@@ -38,6 +50,9 @@ export default class HomeScreen extends React.Component {
       <View style={styles.container}>
           <Text>{this.state.warming}</Text>
           <Button onPress={this.getData} title="Press Me" />
+          <FlatList data={this.state.journeys}
+                    renderItem={({item}) => <Journey mode={item.mode} distance={item.distance} unit={item.unit} />}
+                    keyExtractor={(item, index) => index.toString()} />
       </View>
     );
   }

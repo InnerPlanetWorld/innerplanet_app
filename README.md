@@ -1,6 +1,6 @@
 # innerplanet_app
 
-Android/iOS app written in native-vue
+Android/iOS app written in react-native
 
 
 ## Development

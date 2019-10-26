@@ -3,63 +3,130 @@ import React from 'react';
 import axios from 'axios';
 import { API_ENDPOINT } from '../constants/data'
 import Journey from '../components/journey';
-
-var OWN_SCORE;
-
 import {
-  Image,
-  Platform,
-  ScrollView,
   StyleSheet,
   Text,
   Button,
-  TouchableOpacity,
   View,
   FlatList,
+  TextInput,
+  Picker,
 } from 'react-native';
-
 import { MonoText } from '../components/StyledText';
+
+const FUEL_TYPES = [
+  { key: 'diesel', name: 'Diesel' },
+  { key: 'petrol', name: 'Petrol' },
+  { key: 'electric', name: 'Electric' },
+];
+
+const VEHICLE_OPTIONS = [
+  { key: "small_car", name: 'Small car' },
+  { key: "medium_car", name: 'Medium sized car' },
+  { key: "large_car", name: 'Large Car' },
+  { key: "motorbike", name: 'Motorbike' },
+  { key: "scooter", name: 'Scooter' },
+  { key: "motorised_bike", name: 'Motorised Bike' },
+  { key: "electric_scooter", name: 'Electric Scooter' },
+  { key: "electric_bike", name: 'Electric Bike' },
+  { key: "lorry", name: 'Lorry' },
+  { key: "van", name: 'Van' },
+  // { key: 'bus', name: 'Bus' },
+  // { key: 'train', name: 'Train' },
+  // { key: 'plane', name: 'Plane' },
+]
+
+
+function getDefaultState() {
+  return {
+    warming: 0,
+    mode: 'small_car',
+    distance: 0,
+    unit: 'km',
+    name: '',
+    journeys: [],
+  };
+}
+
+
 
 export default class HomeScreen extends React.Component {
   state = {
     warming: 0,
     mode: 'small_car',
-    distance: 50,
+    distance: 0,
     unit: 'km',
+    name: '',
     journeys: [],
+  }
+
+
+  updateDistance = (distance) => {
+    this.setState({ distance });
+  }
+
+  addJourney = () => {
+    if (!(this.state.distance && this.state.mode
+      && this.state.unit)) {
+      console.log(this.state.distance);
+      console.log(this.state.mode);
+      console.log(this.state.unit);
+      console.log('returning');
+      return;
+    }
+    const journeys = this.state.journeys.concat({
+      journeyName: this.state.name,
+      mode: this.state.mode,
+      distance: this.state.distance,
+      unit: this.state.unit,
+    })
+    this.setState(Object.assign(getDefaultState(), { journeys }));
   }
 
   getData = () => {
     axios.post(API_ENDPOINT, {
-      transport: [
-        { mode: this.state.mode, distance: this.state.distance, unit: this.state.unit },
-      ],
+      transport: this.state.journeys,
     }).then((res) => {
       this.setState({ warming: res.data.warming });
-      const journeys = this.state.journeys.concat({
-        mode: this.state.mode,
-        distance: this.state.distance,
-        unit: this.state.unit,
-      })
-      this.setState({ journeys });
     });
   }
 
+  updateMode = (key) => {
+    this.setState({ mode: key });
+  }
+
   render() {
+    let arrs = VEHICLE_OPTIONS.map((s) => {
+      return <Picker.Item key={s.key} label={s.name} value={s.key} />
+    });
     return (
       <View style={styles.container}>
-          <Text>{this.state.warming}</Text>
-          <Button onPress={this.getData} title="Press Me" />
+          <TextInput style={styles.distanceContainer} placeholder="Distance travelled (km)"
+          keyboardType={'numeric'} onChangeText={this.updateDistance} value={this.state.distance}
+          />
+          <Text>Vehicle type</Text>
+          <Picker
+              style={styles.pickerStyle}
+              selectedValue={this.state.mode}
+              onValueChange={this.updateMode}>
+            {arrs}
+
+          </Picker>
+          <Button onPress={this.addJourney} title="Add Journey" />
+          
           <FlatList data={this.state.journeys}
                     renderItem={({item}) => <Journey mode={item.mode} distance={item.distance} unit={item.unit} />}
                     keyExtractor={(item, index) => index.toString()} />
+
+          <Text>{this.state.warming}</Text>
+          <Button onPress={this.getData} title="Press Me" />
       </View>
     );
   }
 }
 
 HomeScreen.navigationOptions = {
-  header: null,
+  title: 'Inner Planet',
 };
 
 function DevelopmentModeNotice() {
@@ -103,5 +170,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  pickerStyle: {
+    width: 250,
+  },
+  distanceContainer: {
+    margin: 20,
+    width: 200,
+    textAlign: 'center',
+    height: 40,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#009688',
+    marginBottom: 10
   },
 });

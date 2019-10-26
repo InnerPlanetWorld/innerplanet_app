@@ -12,7 +12,7 @@ export default class Journey extends React.Component {
   render() {
     return (
       <View style={styles.container}>
-          <Text>Mode: {this.props.mode}, distance: {this.props.distance}{this.props.unit}</Text>
+          <Text>{this.props.mode}, {this.props.distance}{this.props.unit}</Text>
       </View>
     );
   }

@@ -1,198 +1,214 @@
-import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
+import axios from 'axios';
 import {
-  Image,
-  Platform,
-  ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+  Image,
 } from 'react-native';
+import {
+  Button,
+  Layout,
+  Text,
+  Input,
+  Select,
+  List,
+  ListItem,
+  Icon,
+} from 'react-native-ui-kitten';
+import { API_ENDPOINT } from '../constants/data';
 
-import { MonoText } from '../components/StyledText';
+const StarIcon = (style) => (
+  <Icon {...style} name="trash-2-outline" />
+);
 
-export default function HomeScreen() {
-  return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}>
-        <View style={styles.welcomeContainer}>
-          <Image
-            source={
-              __DEV__
-                ? require('../assets/images/robot-dev.png')
-                : require('../assets/images/robot-prod.png')
-            }
-            style={styles.welcomeImage}
-          />
-        </View>
+const FUEL_TYPES = [ // eslint-disable-line no-unused-vars
+  { key: 'diesel', name: 'Diesel' },
+  { key: 'petrol', name: 'Petrol' },
+  { key: 'electric', name: 'Electric' },
+];
 
-        <View style={styles.getStartedContainer}>
-          <DevelopmentModeNotice />
+// TODO Have breakpoints
+const CARBON_BRACKETS = [
+  // Brackets are calculated as the first number
+  // the carbon generated is less than
+  [10, require('../assets/planets/planet_0.jpg')],
+  [20, require('../assets/planets/planet_1.jpg')],
+  [30, require('../assets/planets/planet_2.jpg')],
+  [40, require('../assets/planets/planet_3.jpg')],
+  [50, require('../assets/planets/planet_4.jpg')],
+  [60, require('../assets/planets/planet_5.jpg')],
+  [Number.MAX_VALUE, require('../assets/planets/planet_6.jpg')],
 
-          <Text style={styles.getStartedText}>Get started by opening</Text>
+];
 
-          <View
-            style={[styles.codeHighlightContainer, styles.homeScreenFilename]}>
-            <MonoText>screens/HomeScreen.js</MonoText>
-          </View>
 
-          <Text style={styles.getStartedText}>
-            Change this text and your app will automatically reload.
-          </Text>
-        </View>
-
-        <View style={styles.helpContainer}>
-          <TouchableOpacity onPress={handleHelpPress} style={styles.helpLink}>
-            <Text style={styles.helpLinkText}>
-              Help, it didn’t automatically reload!
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-
-      <View style={styles.tabBarInfoContainer}>
-        <Text style={styles.tabBarInfoText}>
-          This is a tab bar. You can edit it in:
-        </Text>
-
-        <View
-          style={[styles.codeHighlightContainer, styles.navigationFilename]}>
-          <MonoText style={styles.codeHighlightText}>
-            navigation/MainTabNavigator.js
-          </MonoText>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-HomeScreen.navigationOptions = {
-  header: null,
-};
-
-function DevelopmentModeNotice() {
-  if (__DEV__) {
-    const learnMoreButton = (
-      <Text onPress={handleLearnMorePress} style={styles.helpLinkText}>
-        Learn more
-      </Text>
-    );
-
-    return (
-      <Text style={styles.developmentModeText}>
-        Development mode is enabled: your app will be slower but you can use
-        useful development tools. {learnMoreButton}
-      </Text>
-    );
-  } else {
-    return (
-      <Text style={styles.developmentModeText}>
-        You are not in development mode: your app will run at full speed.
-      </Text>
-    );
-  }
-}
-
-function handleLearnMorePress() {
-  WebBrowser.openBrowserAsync(
-    'https://docs.expo.io/versions/latest/workflow/development-mode/'
-  );
-}
-
-function handleHelpPress() {
-  WebBrowser.openBrowserAsync(
-    'https://docs.expo.io/versions/latest/workflow/up-and-running/#cant-see-your-changes'
-  );
-}
+// TODO enable these options once backend supports them
+const VEHICLE_OPTIONS = [
+  { key: 'small_car', text: 'Small car' },
+  // { key: 'medium_car', text: 'Medium sized car' },
+  // { key: 'large_car', text: 'Large Car' },
+  // { key: 'motorbike', text: 'Motorbike' },
+  // { key: 'scooter', text: 'Scooter' },
+  // { key: 'motorised_bike', text: 'Motorised Bike' },
+  // { key: 'electric_scooter', text: 'Electric Scooter' },
+  // { key: 'electric_bike', text: 'Electric Bike' },
+  // { key: 'lorry', text: 'Lorry' },
+  // { key: 'van', text: 'Van' },
+  // { key: 'bus', text: 'Bus' },
+  { key: 'train', text: 'Train' },
+  // { key: 'plane', text: 'Plane' },
+];
 
 const styles = StyleSheet.create({
   container: {
+    padding: 40,
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  developmentModeText: {
-    marginBottom: 20,
-    color: 'rgba(0,0,0,0.4)',
-    fontSize: 14,
-    lineHeight: 19,
-    textAlign: 'center',
-  },
-  contentContainer: {
-    paddingTop: 30,
-  },
-  welcomeContainer: {
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  welcomeImage: {
-    width: 100,
-    height: 80,
-    resizeMode: 'contain',
-    marginTop: 3,
-    marginLeft: -10,
-  },
-  getStartedContainer: {
-    alignItems: 'center',
-    marginHorizontal: 50,
-  },
-  homeScreenFilename: {
-    marginVertical: 7,
-  },
-  codeHighlightText: {
-    color: 'rgba(96,100,109, 0.8)',
-  },
-  codeHighlightContainer: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 3,
-    paddingHorizontal: 4,
-  },
-  getStartedText: {
-    fontSize: 17,
-    color: 'rgba(96,100,109, 1)',
-    lineHeight: 24,
-    textAlign: 'center',
-  },
-  tabBarInfoContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    ...Platform.select({
-      ios: {
-        shadowColor: 'black',
-        shadowOffset: { width: 0, height: -3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 20,
-      },
-    }),
-    alignItems: 'center',
-    backgroundColor: '#fbfbfb',
-    paddingVertical: 20,
-  },
-  tabBarInfoText: {
-    fontSize: 17,
-    color: 'rgba(96,100,109, 1)',
-    textAlign: 'center',
-  },
-  navigationFilename: {
-    marginTop: 5,
-  },
-  helpContainer: {
-    marginTop: 15,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  helpLink: {
-    paddingVertical: 15,
+  pickerStyle: {
+    width: 250,
   },
-  helpLinkText: {
-    fontSize: 14,
-    color: '#2e78b7',
+  planet: {
+    width: 200,
+    height: 200,
+  },
+  journeyStyle: {
+    width: 400,
+  },
+  journeyBoxStyle: {
+    backgroundColor: 'transparent',
+  },
+  distanceContainer: {
   },
 });
+
+function getDefaultState() {
+  return {
+    warming: 0,
+    mode: null,
+    distance: null,
+    unit: 'km',
+    name: '',
+    journeys: [],
+  };
+}
+
+
+export default class HomeScreen extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      carbon: 0,
+      mode: null,
+      distance: null,
+      unit: 'km',
+      name: '',
+      journeys: [],
+    };
+  }
+
+
+  updateDistance = (distance) => {
+    this.setState({ distance: distance.replace(/[^0-9]/g, '') });
+  }
+
+  addJourney = () => {
+    if (!(this.state.distance && this.state.mode
+      && this.state.unit)) {
+      return;
+    }
+    const journeys = this.state.journeys.concat({
+      journeyName: this.state.name,
+      mode: this.state.mode,
+      distance: Number(this.state.distance),
+      unit: this.state.unit,
+    });
+    this.setState((prevState) => Object.assign(getDefaultState(), {
+      mode: prevState.mode, // keep mode
+      journeys,
+    }));
+  }
+
+  removeJourney = (index) => {
+    this.setState((prevState) => {
+      const newJourneys = [...prevState.journeys];
+      newJourneys.splice(index, 1);
+      return { ...prevState, journeys: newJourneys };
+    });
+  }
+
+  getData = () => {
+    const payload = this.state.journeys.map((j) => Object({
+      mode: j.mode.key,
+      unit: j.unit,
+      distance: j.distance,
+    }));
+    axios.post(API_ENDPOINT, {
+      transport: payload,
+    }).then((res) => {
+      this.setState({ carbon: res.data['CO2 produced'] });
+    }).catch((err) => {
+      console.log(err); // eslint-disable-line no-console
+    });
+  }
+
+  updateMode = (mode) => {
+    this.setState({ mode });
+  }
+
+  getImage = () => {
+    for (let i = 0; i < CARBON_BRACKETS.length; i++) {
+      if (this.state.carbon < CARBON_BRACKETS[i][0]) {
+        return CARBON_BRACKETS[i][1];
+      }
+    }
+    return require('../assets/planets/planet_default.png');
+  }
+
+  renderJourney = ({ item }) => (
+    <ListItem
+      style={styles.journeyStyle}
+      title={item.mode.text}
+      accessory={this.renderJourneyRemoveButton}
+      description={`${item.distance}${item.unit}`}
+    />
+  );
+
+  renderJourneyRemoveButton = (style, index) => (
+    <Button status="danger" icon={StarIcon} onPress={() => this.removeJourney(index)} />
+  )
+
+  render() {
+    return (
+      <Layout style={styles.container}>
+        <Text>{Math.round(this.state.carbon)}kg of carbon produced</Text>
+        <Image style={styles.planet} source={this.getImage()} />
+        <Input
+          style={styles.distanceContainer}
+          placeholder="Distance travelled (km)"
+          status="primary"
+          keyboardType="numeric"
+          onChangeText={this.updateDistance}
+          value={this.state.distance}
+        />
+        <Text>Vehicle type</Text>
+        <Select
+          style={styles.pickerStyle}
+          data={VEHICLE_OPTIONS}
+          placeholder="Choose vehicle"
+          selectedOption={this.state.mode}
+          onSelect={this.updateMode}
+        />
+        <Button onPress={this.addJourney}>Add Journey</Button>
+
+        <List
+          style={styles.journeyBoxStyle}
+          data={this.state.journeys}
+          renderItem={this.renderJourney}
+        />
+
+        <Button onPress={this.getData}>Get Carbon from Journey</Button>
+      </Layout>
+    );
+  }
+}

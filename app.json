@@ -1,13 +1,12 @@
 {
   "expo": {
-    "name": "BigFoot",
+    "name": "Inner Planet",
     "slug": "innerplant",
     "privacy": "public",
     "sdkVersion": "35.0.0",
     "platforms": [
       "ios",
-      "android",
-      "web"
+      "android"
     ],
     "version": "1.0.0",
     "orientation": "portrait",
@@ -24,7 +23,11 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.innerplanet.innerplanetapp"
+    },
+    "android": {
+      "package": "com.innerplanet.innerplanetapp"
     }
   }
 }

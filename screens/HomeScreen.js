@@ -1,28 +1,28 @@
-import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
 import axios from 'axios';
-import { API_ENDPOINT } from '../constants/data'
-import Journey from '../components/journey';
 import {
   StyleSheet,
-  Text,
-  Button,
-  View,
-  FlatList,
-  TextInput,
-  Picker,
   Image,
 } from 'react-native';
-import { MonoText } from '../components/StyledText';
+import {
+  Button,
+  Layout,
+  Text,
+  Input,
+  Select,
+  List,
+  ListItem,
+} from 'react-native-ui-kitten';
+import { API_ENDPOINT } from '../constants/data';
 
-const FUEL_TYPES = [
+const FUEL_TYPES = [ // eslint-disable-line no-unused-vars
   { key: 'diesel', name: 'Diesel' },
   { key: 'petrol', name: 'Petrol' },
   { key: 'electric', name: 'Electric' },
 ];
 
 // TODO Have breakpoints
-const BARRIERS = [
+const BARRIERS = [ // eslint-disable-line no-unused-vars
   0,
   20,
   30,
@@ -30,30 +30,53 @@ const BARRIERS = [
   50,
   60,
   70,
-]
+];
 
 const VEHICLE_OPTIONS = [
-  { key: "small_car", name: 'Small car' },
-  // { key: "medium_car", name: 'Medium sized car' },
-  // { key: "large_car", name: 'Large Car' },
-  // { key: "motorbike", name: 'Motorbike' },
-  // { key: "scooter", name: 'Scooter' },
-  // { key: "motorised_bike", name: 'Motorised Bike' },
-  // { key: "electric_scooter", name: 'Electric Scooter' },
-  // { key: "electric_bike", name: 'Electric Bike' },
-  // { key: "lorry", name: 'Lorry' },
-  // { key: "van", name: 'Van' },
-  // { key: 'bus', name: 'Bus' },
-  { key: 'train', name: 'Train' },
-  // { key: 'plane', name: 'Plane' },
-]
+  { key: 'small_car', text: 'Small car' },
+  // { key: 'medium_car', text: 'Medium sized car' },
+  // { key: 'large_car', text: 'Large Car' },
+  // { key: 'motorbike', text: 'Motorbike' },
+  // { key: 'scooter', text: 'Scooter' },
+  // { key: 'motorised_bike', text: 'Motorised Bike' },
+  // { key: 'electric_scooter', text: 'Electric Scooter' },
+  // { key: 'electric_bike', text: 'Electric Bike' },
+  // { key: 'lorry', text: 'Lorry' },
+  // { key: 'van', text: 'Van' },
+  // { key: 'bus', text: 'Bus' },
+  { key: 'train', text: 'Train' },
+  // { key: 'plane', text: 'Plane' },
+];
 
+const styles = StyleSheet.create({
+  container: {
+    padding: 40,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pickerStyle: {
+    width: 250,
+  },
+  planet: {
+    width: 200,
+    height: 200,
+  },
+  journeyStyle: {
+    width: 400,
+  },
+  journeyBoxStyle: {
+    backgroundColor: 'transparent',
+  },
+  distanceContainer: {
+  },
+});
 
 function getDefaultState() {
   return {
     warming: 0,
-    mode: 'small_car',
-    distance: 0,
+    mode: null,
+    distance: null,
     unit: 'km',
     name: '',
     journeys: [],
@@ -61,25 +84,34 @@ function getDefaultState() {
 }
 
 
+function renderJourney({ item }) {
+  return (
+    <ListItem
+      style={styles.journeyStyle}
+      title={item.mode.text}
+      description={`${item.distance}${item.unit}`}
+    />
+  );
+}
+
 
 export default class HomeScreen extends React.Component {
-  state = {
-    warming: 0,
-    mode: 'small_car',
-    distance: 0,
-    unit: 'km',
-    name: '',
-    journeys: [],
-    planetMode: 'dead',
+  constructor(props) {
+    super(props);
+    this.state = {
+      warming: 0,
+      carbon: 0,
+      mode: null,
+      distance: null,
+      unit: 'km',
+      name: '',
+      journeys: [],
+    };
   }
 
 
   updateDistance = (distance) => {
-    this.setState({ distance });
-  }
-
-  updatePlanetMode = (mode) => {
-    this.setState({ planetMode: mode });
+    this.setState({ distance: distance.replace(/[^0-9]/g, '') });
   }
 
   addJourney = () => {
@@ -92,23 +124,30 @@ export default class HomeScreen extends React.Component {
       mode: this.state.mode,
       distance: Number(this.state.distance),
       unit: this.state.unit,
-    })
-    this.setState(Object.assign(getDefaultState(), { journeys }));
+    });
+    this.setState((prevState) => Object.assign(getDefaultState(), {
+      mode: prevState.mode, // keep mode
+      journeys,
+    }));
   }
 
   getData = () => {
-    console.log(this.state.journeys);
+    const payload = this.state.journeys.map((j) => Object({
+      mode: j.mode.key,
+      unit: j.unit,
+      distance: j.distance,
+    }));
     axios.post(API_ENDPOINT, {
-      transport: this.state.journeys,
+      transport: payload,
     }).then((res) => {
-      this.setState({ warming: res.data.warming });
+      this.setState({ carbon: res.data['CO2 produced'] });
     }).catch((err) => {
-      console.log(err);
+      console.log(err); // eslint-disable-line no-console
     });
   }
 
-  updateMode = (key) => {
-    this.setState({ mode: key });
+  updateMode = (mode) => {
+    this.setState({ mode });
   }
 
   getImage = () => {
@@ -119,97 +158,36 @@ export default class HomeScreen extends React.Component {
   }
 
   render() {
-    let arrs = VEHICLE_OPTIONS.map((s) => {
-      return <Picker.Item key={s.key} label={s.name} value={s.key} />
-    });
     return (
-      <View style={styles.container}>
-          <TextInput style={styles.distanceContainer} placeholder="Distance travelled (km)"
-          keyboardType={'numeric'} onChangeText={this.updateDistance} value={this.state.distance}
-          />
-          <Text>Vehicle type</Text>
-          <Picker
-              style={styles.pickerStyle}
-              selectedValue={this.state.mode}
-              onValueChange={this.updateMode}>
-            {arrs}
+      <Layout style={styles.container}>
+        <Input
+          style={styles.distanceContainer}
+          placeholder="Distance travelled (km)"
+          status="primary"
+          keyboardType="numeric"
+          onChangeText={this.updateDistance}
+          value={this.state.distance}
+        />
+        <Text>Vehicle type</Text>
+        <Select
+          style={styles.pickerStyle}
+          data={VEHICLE_OPTIONS}
+          placeholder="Choose vehicle"
+          selectedOption={this.state.mode}
+          onSelect={this.updateMode}
+        />
+        <Button onPress={this.addJourney}>Add Journey</Button>
 
-          </Picker>
-          <Button onPress={this.addJourney} title="Add Journey" />
-          
-          <FlatList data={this.state.journeys}
-                    renderItem={({item}) => <Journey mode={item.mode} distance={item.distance} unit={item.unit} />}
-                    keyExtractor={(item, index) => index.toString()} />
+        <List
+          style={styles.journeyBoxStyle}
+          data={this.state.journeys}
+          renderItem={renderJourney}
+        />
 
-          <Button onPress={this.getData} title="Get Carbon from Journey" />
-          <Text>{this.state.warming}</Text>
-          <Image style={styles.planet} source={this.getImage()} />
-      </View>
+        <Button onPress={this.getData}>Get Carbon from Journey</Button>
+        <Text>{this.state.carbon}</Text>
+        <Image style={styles.planet} source={this.getImage()} />
+      </Layout>
     );
   }
 }
-
-HomeScreen.navigationOptions = {
-  title: 'Inner Planet',
-};
-
-function DevelopmentModeNotice() {
-  if (__DEV__) {
-    const learnMoreButton = (
-      <Text onPress={handleLearnMorePress} style={styles.helpLinkText}>
-        Learn more
-      </Text>
-    );
-
-    return (
-      <Text style={styles.developmentModeText}>
-        Development mode is enabled: your app will be slower but you can use
-        useful development tools. {learnMoreButton}
-      </Text>
-    );
-  } else {
-    return (
-      <Text style={styles.developmentModeText}>
-        You are not in development mode: your app will run at full speed.
-      </Text>
-    );
-  }
-}
-
-function handleLearnMorePress() {
-  WebBrowser.openBrowserAsync(
-    'https://docs.expo.io/versions/latest/workflow/development-mode/'
-  );
-}
-
-function handleHelpPress() {
-  WebBrowser.openBrowserAsync(
-    'https://docs.expo.io/versions/latest/workflow/up-and-running/#cant-see-your-changes'
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pickerStyle: {
-    width: 250,
-  },
-  planet: {
-    width: 200,
-    height: 200,
-  },
-  distanceContainer: {
-    margin: 20,
-    width: 200,
-    textAlign: 'center',
-    height: 40,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#009688',
-    marginBottom: 10
-  },
-});
